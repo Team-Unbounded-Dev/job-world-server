@@ -21,5 +21,18 @@ spring:
         use_sql_comments: true
     open-in-view: false
 
+  mail:
+    default-encoding: UTF-8
+    host: smtp.gmail.com
+    username: testdisk1110@gmail.com
+    password: "lcbk silq oexu laom"
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+  logging:
+    level:
+      org:
+        springframework: DEBUG
+
 jwt:
   secret: zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==

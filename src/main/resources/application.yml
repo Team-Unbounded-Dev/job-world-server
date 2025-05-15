@@ -36,3 +36,8 @@ spring:
 
 jwt:
   secret: zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==
+
+file:
+  storage:
+    local:
+      directory: ${user.home}/uploads

@@ -59,8 +59,7 @@ public class UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .authority(Authority.TEACHER)
                 .school(request.getSchool())
-                .email(request.getEmail())
-                .build();
+                .build(); // email 제거
         userRepository.save(teacher);
     }
 
@@ -76,7 +75,6 @@ public class UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .authority(Authority.NORMAL)
                 .age(request.getAge())
-                .email(request.getEmail())
                 .build();
 
         Job job = processJob(request.getJobId(), request.getCustomJob());
@@ -139,7 +137,6 @@ public class UserService {
         if (request.getNickname() == null || request.getNickname().trim().isEmpty()) {
             throw new NicknameInvalidException("닉네임은 필수 입력 항목입니다.");
         }
-        // 추가 정규식 검증
         String nicknamePattern = "^[a-zA-Z0-9@#$%&*+-_.]+$";
         if (!request.getNickname().matches(nicknamePattern)) {
             throw new NicknameInvalidException("닉네임은 영어, 숫자, 특수문자(@, #, $, %, &, *, -, _, +, .)만 허용됩니다.");

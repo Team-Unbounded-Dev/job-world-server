@@ -28,5 +28,4 @@ public class RegisterRequest {
 
     private Long grade;
     private Long classNum;
-    private String email;
 }

@@ -53,6 +53,9 @@ public class User {
     @Builder.Default
     private Boolean emailVerified = false;
 
+    @Column(nullable = true)
+    private String profileImageUrl;
+
     public void verifyEmail() {
         this.emailVerified = true;
     }
@@ -63,5 +66,13 @@ public class User {
 
     public void setJob(Job job) {
         this.job = job;
+    }
+
+    public void updateProfile(String name, String nickname, Integer age, Job job, String introduction, String profileImageUrl) {
+        this.name = name;
+        this.nickname = nickname;
+        this.age = age;
+        this.job = job;
+        this.profileImageUrl = profileImageUrl;
     }
 }

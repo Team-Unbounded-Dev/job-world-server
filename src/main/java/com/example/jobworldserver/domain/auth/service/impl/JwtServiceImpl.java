@@ -42,7 +42,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String getUserEmailFromToken(String token) {
+    public String getUserNicknameFromToken(String token) {
         Claims claims = jwtTokenProvider.getClaims(token);
         return claims.getSubject(); // subject는 nickname
     }

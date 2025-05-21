@@ -1,14 +1,26 @@
 package com.example.jobworldserver.domain.auth.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class User {
+@Table(name = "user")
+public class User implements UserDetails, OAuth2User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +32,21 @@ public class User {
     @Column(nullable = false, unique = true)
     private String nickname;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = true, unique = true)
+    private String email;
+
+    @Column(nullable = true)
+    private String provider;
+
+    @Column(nullable = true)
+    private String providerId;
+
+    @Column(nullable = false)
+    private boolean emailVerified;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -47,28 +72,65 @@ public class User {
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
-    @Column(unique = true, nullable = true)
-    private String email;
-
-    @Builder.Default
-    private Boolean emailVerified = false;
-
     @Column(nullable = true)
     private String profileImageUrl;
 
-    public void verifyEmail() {
-        this.emailVerified = true;
+    @Transient
+    private Map<String, Object> attributes = new HashMap<>();
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority(authority.name()));
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    @Override
+    public String getUsername() {
+        return this.email != null ? this.email : this.nickname;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return this.emailVerified;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    @Override
+    public String getName() {
+        return this.email != null ? this.email : this.nickname;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
+
+    public void verifyEmail() {
+        this.emailVerified = true;
     }
 
     public void setJob(Job job) {
         this.job = job;
     }
 
-    public void updateProfile(String name, String nickname, Integer age, Job job, String introduction, String profileImageUrl) {
+    public void updateProfile(String name, String nickname, Integer age, Job job, String profileImageUrl) {
         this.name = name;
         this.nickname = nickname;
         this.age = age;

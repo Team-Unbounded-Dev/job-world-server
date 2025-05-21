@@ -8,4 +8,5 @@ public interface JwtService {
     boolean validateToken(String token);
     User getUserFromToken(String token);
     boolean isTokenBlacklisted(String token);
+    String getUserNicknameFromToken(String token);
 }

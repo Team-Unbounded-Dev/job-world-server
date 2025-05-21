@@ -4,15 +4,14 @@ import com.example.jobworldserver.domain.auth.entity.User;
 import com.example.jobworldserver.domain.auth.repository.UserRepository;
 import com.example.jobworldserver.exception.CustomException.CustomException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import org.springframework.http.HttpStatus;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
@@ -20,14 +19,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String nickname) throws UsernameNotFoundException {
-        User user = userRepository.findByNickname(nickname)
-                .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다: " + nickname, HttpStatus.NOT_FOUND));
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String username) {
+        User user = userRepository.findByEmail(username)
+                .or(() -> userRepository.findByNickname(username))
+                .orElseThrow(() -> {
+                    log.error("사용자를 찾을 수 없음: {}", username);
+                    return new CustomException("해당 사용자를 찾을 수 없습니다: " + username, HttpStatus.NOT_FOUND);
+                });
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getNickname(),
-                user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getAuthority().name()))
-        );
+        log.debug("사용자 로드 성공: {}", username);
+        return user;
     }
 }

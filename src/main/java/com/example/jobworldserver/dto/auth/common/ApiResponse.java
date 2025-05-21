@@ -1,34 +1,37 @@
 package com.example.jobworldserver.dto.auth.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
-@Getter
-@Setter
-public class ApiResponse<T> {
-    private boolean success;
-    private T data;
-    private String message;
-    private int status;
+import java.time.LocalDateTime;
 
-    // 성공 응답 생성자
-    public static <T> ApiResponse<T> success(T data, String message) {
-        ApiResponse<T> response = new ApiResponse<>();
-        response.success = true;
-        response.data = data;
-        response.message = message;
-        response.status = HttpStatus.OK.value();
-        return response;
+@Getter
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ApiResponse<T> {
+    private final boolean success;
+    private final String message;
+    private final int status;
+    private final LocalDateTime timestamp;
+    private final T data;
+
+    private ApiResponse(boolean success, String message, int status, T data) {
+        this.success = success;
+        this.message = message;
+        this.status = status;
+        this.timestamp = LocalDateTime.now();
+        this.data = data;
     }
 
-    // 실패 응답 생성자
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return new ApiResponse<>(true, message, HttpStatus.OK.value(), data);
+    }
+
+    public static <T> ApiResponse<T> success(String message) {
+        return new ApiResponse<>(true, message, HttpStatus.OK.value(), null);
+    }
+
     public static <T> ApiResponse<T> failure(String message, HttpStatus status) {
-        ApiResponse<T> response = new ApiResponse<>();
-        response.success = false;
-        response.data = null;
-        response.message = message;
-        response.status = status.value();
-        return response;
+        return new ApiResponse<>(false, message, status.value(), null);
     }
 }

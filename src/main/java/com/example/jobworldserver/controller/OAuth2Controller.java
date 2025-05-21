@@ -115,5 +115,6 @@ public class OAuth2Controller {
         return ResponseEntity.ok(ApiResponse.success(
                 new AuthResponse(accessToken, refreshToken),
                 "토큰 발급 성공"));
+
     }
 }

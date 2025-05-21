@@ -4,6 +4,7 @@ import com.example.jobworldserver.domain.auth.entity.User;
 import com.example.jobworldserver.domain.auth.jwt.constants.JwtConstants;
 import com.example.jobworldserver.domain.auth.jwt.exception.JwtException;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -30,20 +31,16 @@ public class JwtTokenProvider {
     }
 
     public String generateToken(User user, long expirationMillis) {
-        Claims claims = Jwts.claims()
-                .subject(user.getNickname())
-                .add("authority", user.getAuthority().name())
-                .add("id", user.getId())
-                .build();
-
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
-                .claims(claims)
+                .subject(user.getNickname())
+                .claim("id", user.getId())
+                .claim("authority", user.getAuthority().name())
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(key)
                 .compact();
     }
 

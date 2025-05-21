@@ -1,25 +1,25 @@
 package com.example.jobworldserver.domain.auth.service;
 
-import com.example.jobworldserver.dto.user.request.RegisterRequest;
-import com.example.jobworldserver.dto.student.response.StudentAccountResponse;
 import com.example.jobworldserver.domain.auth.entity.Authority;
 import com.example.jobworldserver.domain.auth.entity.Job;
 import com.example.jobworldserver.domain.auth.entity.User;
 import com.example.jobworldserver.domain.auth.repository.JobRepository;
 import com.example.jobworldserver.domain.auth.repository.UserRepository;
+import com.example.jobworldserver.dto.student.response.StudentAccountResponse;
+import com.example.jobworldserver.dto.user.request.RegisterRequest;
 import com.example.jobworldserver.exception.CustomException.CustomException;
 import com.example.jobworldserver.exception.NicknameInvalidException;
 import com.example.jobworldserver.util.PasswordValidator;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +42,11 @@ public class UserService {
         }
     }
 
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException("이메일로 사용자를 찾을 수 없습니다: " + email, HttpStatus.NOT_FOUND));
+    }
+
     public User findByNickname(String nickname) {
         return userRepository.findByNickname(nickname)
                 .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다: " + nickname, HttpStatus.NOT_FOUND));
@@ -59,7 +64,9 @@ public class UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .authority(Authority.TEACHER)
                 .school(request.getSchool())
-                .build(); // email 제거
+                .email(request.getEmail())
+                .emailVerified(false)
+                .build();
         userRepository.save(teacher);
     }
 
@@ -75,6 +82,8 @@ public class UserService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .authority(Authority.NORMAL)
                 .age(request.getAge())
+                .email(request.getEmail())
+                .emailVerified(false)
                 .build();
 
         Job job = processJob(request.getJobId(), request.getCustomJob());
@@ -120,6 +129,7 @@ public class UserService {
                     .grade((long) grade)
                     .classNum((long) classNum)
                     .teacher(teacher)
+                    .emailVerified(false)
                     .build();
 
             students.add(student);

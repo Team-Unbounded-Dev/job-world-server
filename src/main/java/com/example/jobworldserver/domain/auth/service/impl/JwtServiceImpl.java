@@ -12,8 +12,6 @@ import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import org.springframework.http.HttpStatus;
-
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
@@ -43,22 +41,10 @@ public class JwtServiceImpl implements JwtService {
         }
     }
 
-    public String rotateRefreshToken(User user, String oldRefreshToken) {
-        if (!validateToken(oldRefreshToken)) {
-            throw JwtException.UNAUTHORIZED("유효하지 않은 Refresh Token입니다.");
-        }
-
-        String stored = refreshTokenStoreService.getRefreshToken(user.getId())
-                .orElseThrow(() -> JwtException.UNAUTHORIZED("저장된 Refresh Token이 없습니다."));
-
-        if (!stored.equals(oldRefreshToken)) {
-            throw JwtException.UNAUTHORIZED("Refresh Token이 일치하지 않습니다.");
-        }
-
-        tokenBlacklistService.blacklistToken(oldRefreshToken, JwtConstants.REFRESH_TOKEN_EXPIRATION_TIME);
-
-        String newRefreshToken = createRefreshToken(user);
-        return newRefreshToken;
+    @Override
+    public String getUserEmailFromToken(String token) {
+        Claims claims = jwtTokenProvider.getClaims(token);
+        return claims.getSubject(); // subject는 nickname
     }
 
     @Override
@@ -78,5 +64,22 @@ public class JwtServiceImpl implements JwtService {
         } catch (Exception e) {
             throw JwtException.FORBIDDEN("토큰에서 사용자 정보를 가져오지 못했습니다: " + e.getMessage());
         }
+    }
+
+    public String rotateRefreshToken(User user, String oldRefreshToken) {
+        if (!validateToken(oldRefreshToken)) {
+            throw JwtException.UNAUTHORIZED("유효하지 않은 Refresh Token입니다.");
+        }
+
+        String stored = refreshTokenStoreService.getRefreshToken(user.getId())
+                .orElseThrow(() -> JwtException.UNAUTHORIZED("저장된 Refresh Token이 없습니다."));
+
+        if (!stored.equals(oldRefreshToken)) {
+            throw JwtException.UNAUTHORIZED("Refresh Token이 일치하지 않습니다.");
+        }
+
+        tokenBlacklistService.blacklistToken(oldRefreshToken, JwtConstants.REFRESH_TOKEN_EXPIRATION_TIME);
+
+        return createRefreshToken(user);
     }
 }

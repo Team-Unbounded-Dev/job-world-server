@@ -28,4 +28,7 @@ public class RegisterRequest {
 
     private Long grade;
     private Long classNum;
+
+    @NotBlank(message = "이메일은 필수입니다.")
+    private String email;
 }

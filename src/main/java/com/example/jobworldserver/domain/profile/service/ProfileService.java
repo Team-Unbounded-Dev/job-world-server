@@ -56,7 +56,6 @@ public class ProfileService {
                 request.getNickname(),
                 request.getAge(),
                 job,
-                request.getIntroduction(),
                 profileImageUrl
         );
 

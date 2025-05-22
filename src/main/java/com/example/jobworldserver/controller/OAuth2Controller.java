@@ -4,6 +4,7 @@ import com.example.jobworldserver.domain.auth.entity.User;
 import com.example.jobworldserver.domain.auth.service.JwtService;
 import com.example.jobworldserver.domain.auth.service.UserService;
 import com.example.jobworldserver.dto.auth.common.ApiResponse;
+import com.example.jobworldserver.dto.user.common.UserDto;
 import com.example.jobworldserver.dto.auth.response.AuthResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class OAuth2Controller {
     private final UserService userService;
 
     @GetMapping("/user-info")
-    public ResponseEntity<ApiResponse<User>> getUserInfo(Authentication authentication) {
+    public ResponseEntity<ApiResponse<UserDto>> getUserInfo(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             log.warn("인증된 사용자 정보가 없습니다.");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -65,7 +66,14 @@ public class OAuth2Controller {
         }
 
         log.info("OAuth2 사용자 정보 요청: email={}", user.getEmail());
-        return ResponseEntity.ok(ApiResponse.success(user, "사용자 정보 조회 성공"));
+        UserDto userDto = new UserDto(
+                user.getId(),
+                user.getEmail(),
+                user.getName(),
+                user.getAuthority().name(),
+                null
+        );
+        return ResponseEntity.ok(ApiResponse.success(userDto, "사용자 정보 조회 성공"));
     }
 
     @GetMapping("/token")

@@ -41,8 +41,7 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-//    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
-//    implementation 'org.webjars:webjars-locator-core'
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0' // env 파일용
 }
 
 tasks.named('test') {

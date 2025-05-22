@@ -4,12 +4,14 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: Amgfaa289!@
+  main:
+    allow-bean-definition-overriding: false
+    allow-circular-references: false
 
   data:
     redis:
       host: localhost
       port: 6379
-
 
   jpa:
     hibernate:
@@ -29,10 +31,29 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
-  logging:
-    level:
-      org:
-        springframework: DEBUG
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid,profile,email
+            redirect-uri: "{baseUrl}/job-world/login/oauth2/code/google"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+logging:
+  level:
+    org.springframework.core.env: DEBUG
+    org.springframework.security: TRACE
+    org.springframework.security.oauth2: TRACE
+    com.example.jobworldserver.domain.config: INFO
 
 jwt:
   secret: zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==
@@ -40,4 +61,4 @@ jwt:
 file:
   storage:
     local:
-      directory: ${user.home}/uploads
+      directory: ${user.home}/Uploads

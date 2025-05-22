@@ -1,5 +1,6 @@
 package com.example.jobworldserver.domain.auth.oauth;
 
+import com.example.jobworldserver.domain.auth.entity.Authority;
 import com.example.jobworldserver.domain.auth.entity.User;
 import com.example.jobworldserver.domain.auth.jwt.constants.JwtConstants;
 import com.example.jobworldserver.domain.auth.repository.UserRepository;
@@ -63,17 +64,35 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         return userRepository.findByEmail(email)
                 .orElseGet(() -> {
-                    log.error("OAuth2 Success Handler에서 사용자 조회 실패: {}", email);
+                    log.info("사용자 없음, 새 사용자 등록: {}", email);
                     try {
-                        response.setContentType("application/json");
-                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                        response.getWriter().write(objectMapper.writeValueAsString(
-                                ApiResponse.failure("사용자 정보를 찾을 수 없습니다.", HttpStatus.BAD_REQUEST)
-                        ));
-                    } catch (IOException e) {
-                        log.error("에러 응답 작성 실패: {}", e.getMessage());
+                        User newUser = new User();
+                        newUser.setEmail(email);
+                        newUser.setName((String) attributes.get("name"));
+                        newUser.setNickname(email.split("@")[0]);
+                        newUser.setPassword("OAUTH2_USER");
+                        newUser.setAuthority(Authority.NORMAL);
+                        newUser.setEmailVerified(true);
+                        newUser.setProvider("google");
+                        newUser.setProviderId((String) attributes.get("sub"));
+                        newUser.setProfileImageUrl((String) attributes.get("picture"));
+
+                        User savedUser = userRepository.save(newUser);
+                        log.info("새 사용자 등록 성공: {}", savedUser.getEmail());
+                        return savedUser;
+                    } catch (Exception e) {
+                        log.error("새 사용자 등록 실패: {}", email, e);
+                        try {
+                            response.setContentType("application/json; charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            response.getWriter().write(objectMapper.writeValueAsString(
+                                    ApiResponse.failure("사용자 등록 실패: " + e.getMessage(), HttpStatus.BAD_REQUEST)
+                            ));
+                        } catch (IOException ioException) {
+                            log.error("에러 응답 작성 실패: {}", ioException.getMessage());
+                        }
+                        return null;
                     }
-                    return null;
                 });
     }
 }

@@ -1,5 +1,6 @@
 package com.example.jobworldserver.dto.auth.common;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ public class ApiResponse<T> {
     private final boolean success;
     private final String message;
     private final int status;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private final LocalDateTime timestamp;
     private final T data;
 

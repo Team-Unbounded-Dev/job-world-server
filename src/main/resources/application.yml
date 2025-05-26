@@ -12,7 +12,6 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:} # ElastiCache에서 비밀번호 설정 시 사용
 
   jpa:
     hibernate:
@@ -22,6 +21,7 @@ spring:
         format_sql: true
         show_sql: true
         use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
 
   mail:
@@ -54,6 +54,8 @@ logging:
     org.springframework.security: TRACE
     org.springframework.security.oauth2: TRACE
     com.example.jobworldserver.domain.config: INFO
+    com.zaxxer.hikari: DEBUG
+    com.mysql.cj.jdbc: DEBUG
 
 jwt:
   secret: ${JWT_SECRET:zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==}

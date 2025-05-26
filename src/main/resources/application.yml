@@ -1,18 +1,18 @@
 spring:
   datasource:
-#    url: jdbc:mysql://localhost:3306/job-server?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:job-world-db.c9m4kwqu6stm.ap-northeast-2.rds.amazonaws.com}:${DB_PORT:3306}/${DB_NAME:job-world-db2}?useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    username: ${DB_USER:jhstl}
+    password: ${DB_PASSWORD:amgfaa289}
   main:
     allow-bean-definition-overriding: false
     allow-circular-references: false
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:} # ElastiCache에서 비밀번호 설정 시 사용
 
   jpa:
     hibernate:
@@ -48,7 +48,6 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
-
 logging:
   level:
     org.springframework.core.env: DEBUG
@@ -57,9 +56,9 @@ logging:
     com.example.jobworldserver.domain.config: INFO
 
 jwt:
-  secret: zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==
+  secret: ${JWT_SECRET:zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==}
 
 file:
   storage:
     local:
-      directory: ${user.home}/Uploads
+      directory: ${FILE_STORAGE_DIRECTORY:${user.home}/Uploads}

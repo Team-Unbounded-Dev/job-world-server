@@ -65,7 +65,6 @@ jobs:
               -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
               -e SPRING_DATA_REDIS_HOST="${{ secrets.REDIS_HOST }}" \
               -e SPRING_DATA_REDIS_PORT="6379" \
-              -e SPRING_DATA_REDIS_PASSWORD="${{ secrets.REDIS_PASSWORD }}" \
               -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
               -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \

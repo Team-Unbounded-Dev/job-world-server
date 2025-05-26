@@ -17,7 +17,10 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Gradle
-        run: ./gradlew build -x test
+        run: |
+          ./gradlew clean build -x test
+          ls -la build/libs/
+        shell: /usr/bin/bash -e {0}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -36,9 +39,12 @@ jobs:
           ECR_REPOSITORY: job-world-app
           IMAGE_TAG: ${{ github.sha }}
         run: |
+          echo "Building Docker image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "Image pushed successfully"
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        shell: /usr/bin/bash -e {0}
         id: build-image
 
       - name: Deploy to EC2
@@ -49,10 +55,14 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
-            docker pull ${{ steps.build-image.outputs.image }}
+            echo "Logging into ECR on EC2"
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }} || { echo "ECR login failed"; exit 1; }
+            echo "Pulling Docker image: ${{ steps.build-image.outputs.image }}"
+            docker pull ${{ steps.build-image.outputs.image }} || { echo "Image pull failed"; exit 1; }
+            echo "Stopping and removing old container"
             docker stop job-world-app || true
             docker rm job-world-app || true
+            echo "Running new container"
             docker run -d --name job-world-app -p 8080:8080 \
               -e SPRING_DATASOURCE_URL="jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}?useSSL=false&serverTimezone=UTC" \
               -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USER }}" \
@@ -64,5 +74,7 @@ jobs:
               -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               -e FILE_STORAGE_DIRECTORY="/uploads" \
-              ${{ steps.build-image.outputs.image }}
+              ${{ steps.build-image.outputs.image }} || { echo "Container start failed"; exit 1; }
+            echo "Deployment completed"
           '
+        shell: /usr/bin/bash -e {0}

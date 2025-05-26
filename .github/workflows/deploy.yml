@@ -74,3 +74,4 @@ jobs:
             echo "Deployment completed"
           ' || { echo "SSH connection failed"; exit 1; }
         shell: /usr/bin/bash -e {0}
+

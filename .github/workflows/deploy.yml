@@ -17,10 +17,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build with Gradle
-        run: |
-          ./gradlew clean build -x test
-          ls -la build/libs/
-        shell: /usr/bin/bash -e {0}
+        run: ./gradlew build -x test
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -39,12 +36,9 @@ jobs:
           ECR_REPOSITORY: job-world-app
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          echo "Building Docker image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "Image pushed successfully"
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-        shell: /usr/bin/bash -e {0}
         id: build-image
 
       - name: Deploy to EC2
@@ -53,7 +47,9 @@ jobs:
           HOSTNAME: ${{ secrets.EC2_HOST }}
           USER_NAME: ubuntu
         run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+          echo "Private key file creation started"
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key || { echo "Private key setup failed"; exit 1; }
+          echo "SSH connection attempt to ${USER_NAME}@${HOSTNAME}"
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
             echo "Logging into ECR on EC2"
             aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }} || { echo "ECR login failed"; exit 1; }
@@ -76,5 +72,5 @@ jobs:
               -e FILE_STORAGE_DIRECTORY="/uploads" \
               ${{ steps.build-image.outputs.image }} || { echo "Container start failed"; exit 1; }
             echo "Deployment completed"
-          '
+          ' || { echo "SSH connection failed"; exit 1; }
         shell: /usr/bin/bash -e {0}

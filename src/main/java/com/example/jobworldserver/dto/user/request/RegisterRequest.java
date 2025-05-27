@@ -1,7 +1,7 @@
 package com.example.jobworldserver.dto.user.request;
 
+import com.example.jobworldserver.domain.auth.entity.Authority;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -23,12 +23,12 @@ public class RegisterRequest {
     private Long jobId;
     private String customJob;
 
-    @NotNull(message = "나이는 필수입니다.")
     private Integer age;
 
     private Long grade;
     private Long classNum;
 
-    @NotBlank(message = "이메일은 필수입니다.")
     private String email;
+
+    private Authority authority;
 }

@@ -85,7 +85,7 @@ public class User implements UserDetails, OAuth2User {
 
     @Override
     public String getUsername() {
-        return this.email != null ? this.email : this.nickname;
+        return this.nickname;
     }
 
     @Override
@@ -105,7 +105,7 @@ public class User implements UserDetails, OAuth2User {
 
     @Override
     public boolean isEnabled() {
-        return this.emailVerified;
+        return true;
     }
 
     @Override
@@ -115,7 +115,7 @@ public class User implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        return this.email != null ? this.email : this.nickname;
+        return this.nickname;
     }
 
     public void setAttributes(Map<String, Object> attributes) {

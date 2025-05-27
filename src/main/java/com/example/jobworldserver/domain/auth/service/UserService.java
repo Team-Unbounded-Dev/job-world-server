@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -42,58 +43,94 @@ public class UserService {
         }
     }
 
-    public User findByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException("이메일로 사용자를 찾을 수 없습니다: " + email, HttpStatus.NOT_FOUND));
-    }
-
     public User findByNickname(String nickname) {
         return userRepository.findByNickname(nickname)
                 .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다: " + nickname, HttpStatus.NOT_FOUND));
     }
 
-    public void registerTeacher(RegisterRequest request) {
-        validateRegisterRequest(request, true, false);
-        PasswordValidator.validatePassword(request.getPassword());
-        if (userRepository.findByNickname(request.getNickname()).isPresent()) {
-            throw new CustomException("이미 존재하는 닉네임입니다.", HttpStatus.BAD_REQUEST);
-        }
-        User teacher = User.builder()
-                .name(request.getName())
-                .nickname(request.getNickname())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .authority(Authority.TEACHER)
-                .school(request.getSchool())
-                .email(request.getEmail())
-                .emailVerified(false)
-                .build();
-        userRepository.save(teacher);
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
-    public void registerNormal(RegisterRequest request) {
-        validateRegisterRequest(request, false, true);
+    public void registerUser(RegisterRequest request) {
+        Authority authority = request.getAuthority() != null ? request.getAuthority() : Authority.NORMAL;
+        boolean isSchoolRequired = authority == Authority.TEACHER;
+        boolean isJobAndAgeRequired = authority == Authority.NORMAL;
+
+        validateRegisterRequest(request, isSchoolRequired, isJobAndAgeRequired);
         PasswordValidator.validatePassword(request.getPassword());
+
         if (userRepository.findByNickname(request.getNickname()).isPresent()) {
             throw new CustomException("이미 존재하는 닉네임입니다.", HttpStatus.BAD_REQUEST);
         }
-        User normalUser = User.builder()
+
+        User.UserBuilder userBuilder = User.builder()
                 .name(request.getName())
                 .nickname(request.getNickname())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .authority(Authority.NORMAL)
-                .age(request.getAge())
+                .authority(authority)
                 .email(request.getEmail())
-                .emailVerified(false)
-                .build();
+                .emailVerified(request.getEmail() != null);
 
-        Job job = processJob(request.getJobId(), request.getCustomJob());
-        if (job != null) {
-            normalUser.setJob(job);
-        } else if (request.getJobId() == null && (request.getCustomJob() == null || request.getCustomJob().trim().isEmpty())) {
-            throw new CustomException("직업은 필수 입력 항목입니다.", HttpStatus.BAD_REQUEST);
+        if (authority == Authority.TEACHER) {
+            userBuilder.school(request.getSchool());
+        } else if (authority == Authority.NORMAL) {
+            userBuilder.age(request.getAge());
+            Job job = processJob(request.getJobId(), request.getCustomJob());
+            if (job != null) {
+                userBuilder.job(job);
+            } else {
+                throw new CustomException("직업은 필수 입력 항목입니다.", HttpStatus.BAD_REQUEST);
+            }
         }
 
-        userRepository.save(normalUser);
+        userRepository.save(userBuilder.build());
+    }
+
+    @Transactional
+    public User registerOAuth2User(String email, String name, String provider) {
+        if (userRepository.findByEmail(email).isPresent()) {
+            return userRepository.findByEmail(email).get();
+        }
+
+        String nickname = generateUniqueNickname(name);
+        User.UserBuilder userBuilder = User.builder()
+                .name(name)
+                .nickname(nickname)
+                .password(passwordEncoder.encode(RandomStringUtils.randomAlphanumeric(16))) // 임의의 비밀번호 생성
+                .authority(Authority.NORMAL)
+                .email(email)
+                .emailVerified(true)
+                .provider(provider);
+
+        return userRepository.save(userBuilder.build());
+    }
+
+    private String generateUniqueNickname(String baseName) {
+        String nickname = baseName.toLowerCase().replaceAll("[^a-z0-9]", "") + RandomStringUtils.randomAlphanumeric(4);
+        if (userRepository.findByNickname(nickname).isPresent()) {
+            return generateUniqueNickname(baseName); // 재귀 호출로 중복 방지
+        }
+        return nickname;
+    }
+
+    @Transactional
+    public void updateEmail(String nickname, String email) {
+        User user = findByNickname(nickname);
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new CustomException("이미 존재하는 이메일입니다.", HttpStatus.BAD_REQUEST);
+        }
+        user.setEmail(email);
+        user.setEmailVerified(false);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public void verifyEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException("해당 이메일로 사용자를 찾을 수 없습니다: " + email, HttpStatus.NOT_FOUND));
+        user.verifyEmail();
+        userRepository.save(user);
     }
 
     @Transactional

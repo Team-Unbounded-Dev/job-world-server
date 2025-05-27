@@ -5,8 +5,8 @@ import com.example.jobworldserver.domain.auth.service.UserService;
 import com.example.jobworldserver.dto.auth.common.ApiResponse;
 import com.example.jobworldserver.dto.auth.request.EmailVerificationCheckRequest;
 import com.example.jobworldserver.dto.auth.request.EmailVerificationRequest;
-import com.example.jobworldserver.dto.auth.response.AuthResponse;
 import com.example.jobworldserver.dto.auth.request.LoginRequest;
+import com.example.jobworldserver.dto.auth.response.AuthResponse;
 import com.example.jobworldserver.dto.auth.response.EmailVerificationCheckResponse;
 import com.example.jobworldserver.dto.auth.response.EmailVerificationResponse;
 import com.example.jobworldserver.dto.user.request.RegisterRequest;
@@ -20,6 +20,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,23 +52,39 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/register/teacher")
-    public ResponseEntity<String> registerTeacher(@RequestBody RegisterRequest registerRequest) {
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<String>> register(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
-            userService.registerTeacher(registerRequest);
-            return ResponseEntity.ok("교사 등록 성공");
+            userService.registerUser(registerRequest);
+            String authority = registerRequest.getAuthority() != null ? registerRequest.getAuthority().toString() : "NORMAL";
+            return ResponseEntity.ok(ApiResponse.success("사용자 등록 성공: " + authority));
         } catch (Exception e) {
-            return ResponseEntity.status(400).body("등록 실패: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("등록 실패: " + e.getMessage(), HttpStatus.BAD_REQUEST));
         }
     }
 
-    @PostMapping("/register/normal")
-    public ResponseEntity<String> registerNormal(@RequestBody RegisterRequest registerRequest) {
+    @PostMapping("/update-email")
+    public ResponseEntity<ApiResponse<String>> updateEmail(@Valid @RequestBody EmailVerificationRequest request) {
         try {
-            userService.registerNormal(registerRequest);
-            return ResponseEntity.ok("일반 사용자 등록 성공");
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal() == null) {
+                throw new CustomException("인증된 사용자가 아닙니다.", HttpStatus.UNAUTHORIZED);
+            }
+
+            String nickname;
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User user) {
+                nickname = user.getNickname();
+            } else {
+                throw new CustomException("인증된 사용자 정보를 가져올 수 없습니다.", HttpStatus.UNAUTHORIZED);
+            }
+
+            userService.updateEmail(nickname, request.getEmail());
+            return ResponseEntity.ok(ApiResponse.success("이메일 업데이트 성공"));
         } catch (Exception e) {
-            return ResponseEntity.status(400).body("등록 실패: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure("이메일 업데이트 실패: " + e.getMessage(), HttpStatus.BAD_REQUEST));
         }
     }
 
@@ -102,6 +120,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.failure(response.getMessage(), HttpStatus.BAD_REQUEST));
         }
-        return ResponseEntity.ok(ApiResponse.success(response, "인증 성공"));
+        userService.verifyEmail(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success(response, "이메일 인증 성공"));
     }
 }

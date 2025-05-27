@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,18 +40,19 @@ public class OAuth2Controller {
             user = (User) principal;
         } else if (principal instanceof OAuth2User oAuth2User) {
             String email = oAuth2User.getAttribute("email");
-            if (email == null) {
-                log.warn("OAuth2User에서 이메일을 찾을 수 없음");
+            String name = oAuth2User.getAttribute("name");
+            String provider = oAuth2User.getAttribute("provider");
+
+            if (email == null || name == null) {
+                log.warn("OAuth2User에서 필수 속성을 찾을 수 없음: email={}, name={}", email, name);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.failure("사용자 이메일을 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED));
+                        .body(ApiResponse.failure("사용자 정보를 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED));
             }
-            user = userService.findByEmail(email);
-        } else if (principal instanceof UserDetails userDetails) {
-            String username = userDetails.getUsername();
-            user = userService.findByEmail(username);
-            if (user == null) {
-                user = userService.findByNickname(username);
-            }
+
+            user = userService.findByEmail(email).orElseGet(() -> {
+                log.info("새로운 OAuth2 사용자 등록: email={}", email);
+                return userService.registerOAuth2User(email, name, provider);
+            });
         } else {
             log.warn("알 수 없는 인증 객체: {}", principal.getClass().getName());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -91,18 +91,19 @@ public class OAuth2Controller {
             user = (User) principal;
         } else if (principal instanceof OAuth2User oAuth2User) {
             String email = oAuth2User.getAttribute("email");
-            if (email == null) {
-                log.warn("OAuth2User에서 이메일을 찾을 수 없음");
+            String name = oAuth2User.getAttribute("name");
+            String provider = oAuth2User.getAttribute("provider");
+
+            if (email == null || name == null) {
+                log.warn("OAuth2User에서 필수 속성을 찾을 수 없음: email={}, name={}", email, name);
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(ApiResponse.failure("사용자 이메일을 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED));
+                        .body(ApiResponse.failure("사용자 정보를 찾을 수 없습니다.", HttpStatus.UNAUTHORIZED));
             }
-            user = userService.findByEmail(email);
-        } else if (principal instanceof UserDetails userDetails) {
-            String username = userDetails.getUsername();
-            user = userService.findByEmail(username);
-            if (user == null) {
-                user = userService.findByNickname(username);
-            }
+
+            user = userService.findByEmail(email).orElseGet(() -> {
+                log.info("새로운 OAuth2 사용자 등록: email={}", email);
+                return userService.registerOAuth2User(email, name, provider);
+            });
         } else {
             log.warn("알 수 없는 인증 객체: {}", principal.getClass().getName());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -123,6 +124,5 @@ public class OAuth2Controller {
         return ResponseEntity.ok(ApiResponse.success(
                 new AuthResponse(accessToken, refreshToken),
                 "토큰 발급 성공"));
-
     }
 }

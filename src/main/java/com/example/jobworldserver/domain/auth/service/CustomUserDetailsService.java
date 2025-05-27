@@ -21,8 +21,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) {
-        User user = userRepository.findByEmail(username)
-                .or(() -> userRepository.findByNickname(username))
+        User user = userRepository.findByNickname(username)
                 .orElseThrow(() -> {
                     log.error("사용자를 찾을 수 없음: {}", username);
                     return new CustomException("해당 사용자를 찾을 수 없습니다: " + username, HttpStatus.NOT_FOUND);

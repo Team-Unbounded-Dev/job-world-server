@@ -1,10 +1,10 @@
-package com.example.jobworldserver.domain.auth.jwt.exception;
+package com.example.jobworldserver.auth.jwt;
 
+import com.example.jobworldserver.auth.service.CustomUserDetailsService;
+import com.example.jobworldserver.auth.service.JwtService;
 import com.example.jobworldserver.dto.auth.common.ApiResponse;
-import com.example.jobworldserver.domain.auth.jwt.constants.JwtConstants;
-import com.example.jobworldserver.domain.auth.service.CustomUserDetailsService;
-import com.example.jobworldserver.domain.auth.service.JwtService;
-import com.example.jobworldserver.domain.auth.jwt.exception.JwtException;
+import com.example.jobworldserver.auth.jwt.constants.JwtConstants;
+import com.example.jobworldserver.auth.jwt.exception.JwtException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -37,35 +37,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(jwt) && jwtService.validateToken(jwt) && !jwtService.isTokenBlacklisted(jwt)) {
             try {
-                String nickname = jwtService.getUserNicknameFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(nickname);
+                Long userId = jwtService.getUserIdFromToken(jwt);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userId.toString());
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("JWT 인증 성공: {}", nickname);
+                log.debug("JWT 인증 성공: userId={}", userId);
             } catch (JwtException e) {
                 log.error("JWT 인증 실패: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(objectMapper.writeValueAsString(
-                        ApiResponse.failure("JWT 인증 실패: " + e.getMessage(), HttpStatus.UNAUTHORIZED)
-                ));
+                sendErrorResponse(response, "JWT 인증 실패: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
                 return;
             } catch (Exception e) {
                 log.error("서버 오류: {}", e.getMessage());
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.setContentType("application/json");
-                response.setCharacterEncoding("UTF-8");
-                response.getWriter().write(objectMapper.writeValueAsString(
-                        ApiResponse.failure("서버 오류: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR)
-                ));
+                sendErrorResponse(response, "서버 오류: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
                 return;
             }
         }
-
         filterChain.doFilter(request, response);
+    }
+
+    private void sendErrorResponse(HttpServletResponse response, String message, HttpStatus status) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(objectMapper.writeValueAsString(
+                ApiResponse.failure(message, status)
+        ));
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {

@@ -1,12 +1,9 @@
-package com.example.jobworldserver.domain.auth.jwt.token;
+package com.example.jobworldserver.auth.jwt.token;
 
-import com.example.jobworldserver.domain.auth.entity.User;
-import com.example.jobworldserver.domain.auth.jwt.constants.JwtConstants;
-import com.example.jobworldserver.domain.auth.jwt.exception.JwtException;
+import com.example.jobworldserver.auth.entity.User;
+import com.example.jobworldserver.auth.jwt.exception.JwtException;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,8 +32,8 @@ public class JwtTokenProvider {
         Date expiryDate = new Date(now.getTime() + expirationMillis);
 
         return Jwts.builder()
-                .subject(user.getNickname())
-                .claim("id", user.getId())
+                .subject(user.getId().toString()) // ID를 subject로 설정
+                .claim("nickname", user.getNickname()) // 닉네임 추가
                 .claim("authority", user.getAuthority().name())
                 .issuedAt(now)
                 .expiration(expiryDate)
@@ -67,5 +64,15 @@ public class JwtTokenProvider {
         } catch (Exception e) {
             throw JwtException.UNAUTHORIZED("토큰에서 클레임을 가져오지 못했습니다: " + e.getMessage());
         }
+    }
+
+    public Long getUserIdFromToken(String token) {
+        Claims claims = getClaims(token);
+        return Long.valueOf(claims.getSubject());
+    }
+
+    public String getUserNicknameFromToken(String token) {
+        Claims claims = getClaims(token);
+        return claims.get("nickname", String.class);
     }
 }

@@ -1,13 +1,13 @@
-package com.example.jobworldserver.domain.auth.service.impl;
+package com.example.jobworldserver.auth.jwt;
 
-import com.example.jobworldserver.domain.auth.entity.Authority;
-import com.example.jobworldserver.domain.auth.entity.User;
-import com.example.jobworldserver.domain.auth.jwt.constants.JwtConstants;
-import com.example.jobworldserver.domain.auth.jwt.exception.JwtException;
-import com.example.jobworldserver.domain.auth.jwt.token.JwtTokenProvider;
-import com.example.jobworldserver.domain.auth.jwt.token.RefreshTokenStoreService;
-import com.example.jobworldserver.domain.auth.jwt.token.TokenBlacklistService;
-import com.example.jobworldserver.domain.auth.service.JwtService;
+import com.example.jobworldserver.auth.service.JwtService;
+import com.example.jobworldserver.auth.entity.Authority;
+import com.example.jobworldserver.auth.entity.User;
+import com.example.jobworldserver.auth.jwt.constants.JwtConstants;
+import com.example.jobworldserver.auth.jwt.exception.JwtException;
+import com.example.jobworldserver.auth.jwt.token.JwtTokenProvider;
+import com.example.jobworldserver.auth.jwt.token.RefreshTokenStoreService;
+import com.example.jobworldserver.auth.jwt.token.TokenBlacklistService;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,8 +43,12 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String getUserNicknameFromToken(String token) {
-        Claims claims = jwtTokenProvider.getClaims(token);
-        return claims.getSubject(); // subject는 nickname
+        return jwtTokenProvider.getUserNicknameFromToken(token);
+    }
+
+    @Override
+    public Long getUserIdFromToken(String token) {
+        return jwtTokenProvider.getUserIdFromToken(token);
     }
 
     @Override
@@ -57,9 +61,9 @@ public class JwtServiceImpl implements JwtService {
         try {
             Claims claims = jwtTokenProvider.getClaims(token);
             return User.builder()
-                    .id(Long.valueOf(claims.get("id").toString()))
-                    .nickname(claims.getSubject())
-                    .authority(Authority.valueOf(claims.get("authority").toString()))
+                    .id(Long.valueOf(claims.getSubject()))
+                    .nickname(claims.get("nickname", String.class))
+                    .authority(Authority.valueOf(claims.get("authority", String.class)))
                     .build();
         } catch (Exception e) {
             throw JwtException.FORBIDDEN("토큰에서 사용자 정보를 가져오지 못했습니다: " + e.getMessage());

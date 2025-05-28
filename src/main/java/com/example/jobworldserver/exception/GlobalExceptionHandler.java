@@ -1,7 +1,5 @@
 package com.example.jobworldserver.exception;
 
-import com.example.jobworldserver.domain.auth.jwt.exception.JwtException;
-import com.example.jobworldserver.exception.CustomException.CustomException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;

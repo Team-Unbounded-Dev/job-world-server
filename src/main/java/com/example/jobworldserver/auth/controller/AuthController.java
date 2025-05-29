@@ -16,6 +16,9 @@ import com.example.jobworldserver.user.dto.request.RegisterRequest;
 import com.example.jobworldserver.user.service.UserService;
 import com.example.jobworldserver.auth.entity.User;
 import com.example.jobworldserver.exception.CustomException;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Authentication", description = "인증 및 사용자 관리 API")
 @RestController
 @RequestMapping("/job-world")
 @RequiredArgsConstructor
@@ -35,6 +39,11 @@ public class AuthController {
     private final EmailService emailService;
     private final EmailVerificationService verificationService;
 
+    @Operation(summary = "사용자 회원가입", description = "새로운 사용자를 임시 등록하고 이메일 인증을 요청합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "임시 사용자 등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청")
+    })
     @PostMapping("/signup")
     public ResponseEntity<ApiResponse<RegisterResponse>> signup(@Valid @RequestBody RegisterRequest registerRequest) {
         try {
@@ -50,6 +59,13 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "이메일 인증 요청", description = "이메일로 인증 코드를 발송합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "이메일 인증 요청 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이미 등록된 이메일"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "임시 사용자를 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "서버 오류")
+    })
     @PostMapping("/verify-email")
     public ResponseEntity<ApiResponse<EmailVerificationResponse>> verifyEmail(
             @Valid @RequestBody EmailVerificationRequest request) throws MessagingException {
@@ -72,6 +88,11 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response, "이메일 인증 요청 성공"));
     }
 
+    @Operation(summary = "이메일 인증 확인", description = "이메일 인증 코드를 확인하고 회원가입을 완료합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "이메일 인증 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 인증 코드")
+    })
     @PostMapping("/check-verification")
     public ResponseEntity<ApiResponse<EmailVerificationCheckResponse>> checkVerification(
             @Valid @RequestBody EmailVerificationCheckRequest request) {
@@ -85,6 +106,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response, "이메일 인증 성공. 회원가입이 완료되었습니다. 로그인해 주세요."));
     }
 
+    @Operation(summary = "사용자 로그인", description = "닉네임과 비밀번호로 로그인하여 토큰을 발급받습니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "잘못된 닉네임 또는 비밀번호"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "이메일 인증 미완료")
+    })
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
         User user = userService.findByNickname(loginRequest.getNickname());
@@ -100,6 +127,11 @@ public class AuthController {
         }
     }
 
+    @Operation(summary = "토큰 갱신", description = "Refresh Token을 사용하여 새로운 Access Token과 Refresh Token을 발급받습니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 갱신 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 Refresh Token")
+    })
     @PostMapping("/reissue")
     public ResponseEntity<AuthResponse> reissue(@RequestBody TokenReissueRequest request) {
         if (!jwtService.validateToken(request.getRefreshToken())) {

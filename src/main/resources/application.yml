@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: jobworld-server
   datasource:
     url: jdbc:mysql://${DB_HOST:job-world-db2.c9m4kwqu6stm.ap-northeast-2.rds.amazonaws.com}:${DB_PORT:3306}/${DB_NAME:job-world-db2}?useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -7,12 +9,10 @@ spring:
   main:
     allow-bean-definition-overriding: false
     allow-circular-references: false
-
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,16 +23,17 @@ spring:
         use_sql_comments: true
         dialect: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
-
   mail:
     default-encoding: UTF-8
     host: smtp.gmail.com
     username: testdisk1110@gmail.com
     password: "lcbk silq oexu laom"
     properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   security:
     oauth2:
       client:
@@ -48,6 +49,18 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  packages-to-scan: com.example.jobworldserver
+
 logging:
   level:
     org.springframework.core.env: DEBUG

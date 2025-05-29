@@ -1,5 +1,6 @@
 package com.example.jobworldserver.auth.controller;
 
+import com.example.jobworldserver.auth.entity.Authority;
 import com.example.jobworldserver.auth.entity.User;
 import com.example.jobworldserver.auth.jwt.constants.DashboardConstants;
 import com.example.jobworldserver.user.dto.request.BulkRegisterRequest;
@@ -39,11 +40,17 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(responses, "학생 일괄 등록 성공"));
     }
 
-    @GetMapping("/dashboard")
+    @GetMapping("/main")
     @PreAuthorize("hasAnyAuthority('TEACHER', 'STUDENT', 'NORMAL')")
-    public ResponseEntity<ApiResponse<String>> getDashboard(Authentication authentication) {
-        String role = authentication.getAuthorities().iterator().next().getAuthority();
-        String message = DashboardConstants.getDashboardMessage(role);
-        return ResponseEntity.ok(ApiResponse.success(message, role + " 대시보드 접근 성공"));
+    public ResponseEntity<ApiResponse<String>> getMainPage(Authentication authentication) {
+        String authorityStr = authentication.getAuthorities().iterator().next().getAuthority();
+        Authority authority;
+        try {
+            authority = Authority.valueOf(authorityStr);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.ok(ApiResponse.success("메인페이지에 오신 것을 환영합니다.", "알 수 없는 권한으로 메인페이지 접근 성공"));
+        }
+        String message = DashboardConstants.getMainPageMessage(authority);
+        return ResponseEntity.ok(ApiResponse.success(message, authorityStr + " 메인페이지 접근 성공"));
     }
 }

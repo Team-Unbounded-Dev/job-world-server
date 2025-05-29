@@ -7,6 +7,9 @@ import com.example.jobworldserver.user.dto.request.BulkRegisterRequest;
 import com.example.jobworldserver.user.dto.response.StudentAccountResponse;
 import com.example.jobworldserver.dto.auth.common.ApiResponse;
 import com.example.jobworldserver.user.service.StudentAccountService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "User Management", description = "사용자 관리 API")
 @RestController
 @RequestMapping("/job-world")
 @RequiredArgsConstructor
@@ -23,6 +27,11 @@ public class UserController {
 
     private final StudentAccountService studentAccountService;
 
+    @Operation(summary = "학생 일괄 등록", description = "TEACHER 권한을 가진 사용자가 학생 계정을 일괄 등록합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "학생 일괄 등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "TEACHER 권한 필요")
+    })
     @PostMapping("/bulk-register-students")
     @PreAuthorize("hasAuthority('TEACHER')")
     public ResponseEntity<ApiResponse<List<StudentAccountResponse>>> bulkRegisterStudents(
@@ -40,6 +49,11 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(responses, "학생 일괄 등록 성공"));
     }
 
+    @Operation(summary = "메인 페이지 접근", description = "권한에 따라 메인 페이지 메시지를 반환합니다.")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "메인 페이지 접근 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "TEACHER, STUDENT, NORMAL 권한 필요")
+    })
     @GetMapping("/main")
     @PreAuthorize("hasAnyAuthority('TEACHER', 'STUDENT', 'NORMAL')")
     public ResponseEntity<ApiResponse<String>> getMainPage(Authentication authentication) {

@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/job-world/**", "/job-world/register/**", "/job-world/oauth2/**", "/oauth2/authorization/**").permitAll()
                         .requestMatchers("/oauth2/user-info").authenticated()
+                        .requestMatchers("/job-world/cards").hasAnyAuthority("TEACHER", "STUDENT", "NORMAL")
                         .requestMatchers("/api/teacher/**").hasAuthority("TEACHER")
                         .requestMatchers("/api/student/**").hasAuthority("STUDENT")
                         .requestMatchers("/api/normal/**").hasAuthority("NORMAL")

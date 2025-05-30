@@ -11,7 +11,7 @@ spring:
     allow-circular-references: false
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:13.125.112.86}
       port: ${REDIS_PORT:6379}
   jpa:
     hibernate:
@@ -42,7 +42,7 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: openid,profile,email
-            redirect-uri: "{baseUrl}/job-world/login/oauth2/code/google"
+            redirect-uri: "http://13.125.112.86/job-world/login/oauth2/code/google"
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
@@ -57,9 +57,10 @@ springdoc:
     path: /swagger-ui.html
     operations-sorter: method
     tags-sorter: alpha
+    oauth2RedirectUrl: http://13.125.112.86/swagger-ui/oauth2-redirect.html
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-  packages-to-scan: com.example.jobworldserver
+  packages-to-scan: com.example.jobworldserver.auth.controller, com.example.jobworldserver.jobs.controller, com.example.jobworldserver.profile.controller
 
 logging:
   level:
@@ -69,6 +70,7 @@ logging:
     com.example.jobworldserver.domain.config: INFO
     com.zaxxer.hikari: DEBUG
     com.mysql.cj.jdbc: DEBUG
+    org.springdoc: DEBUG
 
 jwt:
   secret: ${JWT_SECRET:zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==}
@@ -76,4 +78,4 @@ jwt:
 file:
   storage:
     local:
-      directory: ${FILE_STORAGE_DIRECTORY:${user.home}/Uploads}
+      directory: ${FILE_STORAGE_DIRECTORY:/var/www/uploads}

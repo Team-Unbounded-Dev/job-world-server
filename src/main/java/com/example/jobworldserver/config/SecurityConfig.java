@@ -7,6 +7,7 @@ import com.example.jobworldserver.auth.service.JwtService;
 import com.example.jobworldserver.oauth.handler.OAuth2FailureHandler;
 import com.example.jobworldserver.oauth.handler.OAuth2SuccessHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -47,7 +48,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/job-world/**", "/job-world/register/**", "/job-world/oauth2/**", "/oauth2/authorization/**").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/api-docs", "/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/job-world/signup", "/job-world/verify-email", "/job-world/check-verification").permitAll()
+                        .requestMatchers("/job-world/**").authenticated()
                         .requestMatchers("/oauth2/user-info").authenticated()
                         .requestMatchers("/job-world/cards").hasAnyAuthority("TEACHER", "STUDENT", "NORMAL")
                         .requestMatchers("/api/teacher/**").hasAuthority("TEACHER")
@@ -63,8 +66,15 @@ public class SecurityConfig {
                                 .baseUri("/job-world/login/oauth2/code/*")
                         )
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService, userDetailsService, objectMapper),
-                        UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtService, userDetailsService, objectMapper) {
+                    @Override
+                    protected boolean shouldNotFilter(HttpServletRequest request) {
+                        String path = request.getRequestURI();
+                        return path.startsWith("/api-docs") || path.startsWith("/swagger-ui") ||
+                                path.startsWith("/job-world/signup") || path.startsWith("/job-world/verify-email") ||
+                                path.startsWith("/job-world/check-verification");
+                    }
+                }, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

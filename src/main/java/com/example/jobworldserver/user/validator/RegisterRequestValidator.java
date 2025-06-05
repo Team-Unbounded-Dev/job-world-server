@@ -30,7 +30,7 @@ public class RegisterRequestValidator {
             if (request.getAge() == null || request.getAge() < 1) {
                 throw new CustomException("나이는 필수이며 1 이상이어야 합니다.", HttpStatus.BAD_REQUEST);
             }
-            if (request.getJobId() == null && (request.getCustomJob() == null || request.getCustomJob().trim().isEmpty())) {
+            if (request.getJobId() == null) {
                 throw new CustomException("직업은 필수 입력 항목입니다.", HttpStatus.BAD_REQUEST);
             }
         }

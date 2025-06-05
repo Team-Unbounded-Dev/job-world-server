@@ -24,8 +24,6 @@ public class RegisterRequest {
 
     private Long jobId;
 
-    private String customJob;
-
     private Integer age;
 
     private Long grade;

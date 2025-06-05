@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
             userBuilder.school(request.getSchool());
         } else if (authority == Authority.NORMAL) {
             userBuilder.age(request.getAge());
-            Job job = processJob(request.getJobId(), request.getCustomJob());
+            Job job = processJob(request.getJobId());
             if (job != null) {
                 userBuilder.job(job);
             } else {
@@ -143,16 +143,10 @@ public class UserServiceImpl implements UserService {
         return nickname;
     }
 
-    private Job processJob(Long jobId, String customJob) {
+    private Job processJob(Long jobId) {
         if (jobId != null) {
             return jobRepository.findById(jobId)
                     .orElseThrow(() -> new CustomException("해당 직업 ID가 존재하지 않습니다: " + jobId, HttpStatus.BAD_REQUEST));
-        } else if (customJob != null && !customJob.trim().isEmpty()) {
-            return jobRepository.findByName(customJob)
-                    .orElseGet(() -> {
-                        Job newJob = Job.builder().name(customJob.trim()).build();
-                        return jobRepository.save(newJob);
-                    });
         }
         return null;
     }

@@ -70,23 +70,23 @@ public class UserServiceImpl implements UserService {
             throw new CustomException("이미 존재하는 닉네임입니다.", HttpStatus.BAD_REQUEST);
         }
 
+        String jobName = convertJobIdToName(request.getJobId());
+        if (isJobAndAgeRequired && jobName == null) {
+            throw new CustomException("직업은 필수 입력 항목입니다.", HttpStatus.BAD_REQUEST);
+        }
+
         User.UserBuilder userBuilder = User.builder()
                 .name(request.getName())
                 .nickname(request.getNickname())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .authority(authority)
-                .emailVerified(false);
+                .emailVerified(false)
+                .jobName(jobName);
 
         if (authority == Authority.TEACHER) {
             userBuilder.school(request.getSchool());
         } else if (authority == Authority.NORMAL) {
             userBuilder.age(request.getAge());
-            Job job = processJob(request.getJobId());
-            if (job != null) {
-                userBuilder.job(job);
-            } else {
-                throw new CustomException("직업은 필수 입력 항목입니다.", HttpStatus.BAD_REQUEST);
-            }
         }
 
         User tempUser = userRepository.save(userBuilder.build());
@@ -143,10 +143,10 @@ public class UserServiceImpl implements UserService {
         return nickname;
     }
 
-    private Job processJob(Long jobId) {
+    private String convertJobIdToName(Long jobId) {
         if (jobId != null) {
-            return jobRepository.findById(jobId)
-                    .orElseThrow(() -> new CustomException("해당 직업 ID가 존재하지 않습니다: " + jobId, HttpStatus.BAD_REQUEST));
+            Optional<Job> job = jobRepository.findById(jobId);
+            return job.map(Job::getName).orElse(null);
         }
         return null;
     }

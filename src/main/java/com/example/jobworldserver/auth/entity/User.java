@@ -52,9 +52,8 @@ public class User implements UserDetails, OAuth2User {
     @Column(nullable = true)
     private String school;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "job_id")
-    private Job job;
+    @Column(nullable = true)
+    private String jobName;
 
     @Column(nullable = true)
     private Integer age;
@@ -125,15 +124,11 @@ public class User implements UserDetails, OAuth2User {
         this.emailVerified = true;
     }
 
-    public void setJob(Job job) {
-        this.job = job;
-    }
-
-    public void updateProfile(String name, String nickname, Integer age, Job job, String profileImageUrl, String introduction) {
+    public void updateProfile(String name, String nickname, Integer age, String jobName, String profileImageUrl, String introduction) {
         this.name = name != null ? name : this.name;
         this.nickname = nickname != null ? nickname : this.nickname;
         this.age = age != null ? age : this.age;
-        this.job = job != null ? job : this.job;
+        this.jobName = jobName != null ? jobName : this.jobName;
         this.profileImageUrl = profileImageUrl != null ? profileImageUrl : this.profileImageUrl;
         this.introduction = introduction != null ? introduction : this.introduction;
     }

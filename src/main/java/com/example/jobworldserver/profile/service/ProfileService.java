@@ -1,8 +1,6 @@
 package com.example.jobworldserver.profile.service;
 
-import com.example.jobworldserver.auth.entity.Job;
 import com.example.jobworldserver.auth.entity.User;
-import com.example.jobworldserver.user.repository.JobRepository;
 import com.example.jobworldserver.profile.dto.request.ProfileRequest;
 import com.example.jobworldserver.profile.dto.response.ProfileResponse;
 import com.example.jobworldserver.exception.CustomException;
@@ -24,7 +22,6 @@ public class ProfileService {
     private static final Logger logger = LoggerFactory.getLogger(ProfileService.class);
 
     private final UserRepository userRepository;
-    private final JobRepository jobRepository; // 추가
     private final FileStorageService fileStorageService;
 
     @Transactional
@@ -56,17 +53,16 @@ public class ProfileService {
             }
         }
 
-        Job job = user.getJob();
+        String jobName = user.getJobName();
         if (request.getJob() != null) {
-            job = jobRepository.findByName(request.getJob())
-                    .orElseThrow(() -> new CustomException("존재하지 않는 직업: " + request.getJob(), HttpStatus.BAD_REQUEST));
+            jobName = request.getJob();
         }
 
         user.updateProfile(
                 request.getName(),
                 request.getNickname(),
                 request.getAge(),
-                job,
+                jobName,
                 profileImageUrl,
                 request.getIntroduction()
         );
@@ -88,7 +84,7 @@ public class ProfileService {
         response.setName(user.getName());
         response.setNickname(user.getNickname());
         response.setAge(user.getAge());
-        response.setJob(user.getJob() != null ? user.getJob().getName() : null);
+        response.setJob(user.getJobName());
         response.setIntroduction(user.getIntroduction());
         response.setProfileImageUrl(user.getProfileImageUrl());
         return response;

@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: jobworld-server
   datasource:
     url: jdbc:mysql://${DB_HOST:job-world-db2.c9m4kwqu6stm.ap-northeast-2.rds.amazonaws.com}:${DB_PORT:3306}/${DB_NAME:job-world-db2}?useSSL=false&serverTimezone=UTC
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -7,12 +9,10 @@ spring:
   main:
     allow-bean-definition-overriding: false
     allow-circular-references: false
-
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:13.125.112.86}
       port: ${REDIS_PORT:6379}
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -23,16 +23,17 @@ spring:
         use_sql_comments: true
         dialect: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
-
   mail:
     default-encoding: UTF-8
     host: smtp.gmail.com
     username: testdisk1110@gmail.com
     password: "lcbk silq oexu laom"
     properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
   security:
     oauth2:
       client:
@@ -41,13 +42,26 @@ spring:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
             scope: openid,profile,email
-            redirect-uri: "{baseUrl}/job-world/login/oauth2/code/google"
+            redirect-uri: "http://13.125.112.86/job-world/login/oauth2/code/google"
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    oauth2RedirectUrl: http://13.125.112.86/swagger-ui/oauth2-redirect.html
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+  packages-to-scan: com.example.jobworldserver.auth.controller, com.example.jobworldserver.jobs.controller, com.example.jobworldserver.profile.controller
+
 logging:
   level:
     org.springframework.core.env: DEBUG
@@ -56,6 +70,7 @@ logging:
     com.example.jobworldserver.domain.config: INFO
     com.zaxxer.hikari: DEBUG
     com.mysql.cj.jdbc: DEBUG
+    org.springdoc: DEBUG
 
 jwt:
   secret: ${JWT_SECRET:zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==}
@@ -63,4 +78,4 @@ jwt:
 file:
   storage:
     local:
-      directory: ${FILE_STORAGE_DIRECTORY:${user.home}/Uploads}
+      directory: ${FILE_STORAGE_DIRECTORY:/var/www/uploads}

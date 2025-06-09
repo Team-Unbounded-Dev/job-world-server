@@ -50,6 +50,15 @@ spring:
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
 
+cloud:
+  aws:
+    s3:
+      bucket: ${AWS_S3_BUCKET:job-world-profile-images}
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+
 springdoc:
   api-docs:
     path: /api-docs
@@ -74,8 +83,3 @@ logging:
 
 jwt:
   secret: ${JWT_SECRET:zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==}
-
-file:
-  storage:
-    local:
-      directory: ${FILE_STORAGE_DIRECTORY:/var/www/uploads}

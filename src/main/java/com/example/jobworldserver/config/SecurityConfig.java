@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/swagger-ui.html", "/api-docs", "/api-docs/**", "/swagger-ui/**").permitAll()
-                        .requestMatchers("/job-world/signup", "/job-world/verify-email", "/job-world/check-verification").permitAll()
+                        .requestMatchers("/job-world/signup", "/job-world/verify-email", "/job-world/check-verification", "/job-world/login").permitAll()
                         .requestMatchers("/job-world/**").authenticated()
                         .requestMatchers("/oauth2/user-info").authenticated()
                         .requestMatchers("/job-world/cards").hasAnyAuthority("TEACHER", "STUDENT", "NORMAL")
@@ -70,9 +70,12 @@ public class SecurityConfig {
                     @Override
                     protected boolean shouldNotFilter(HttpServletRequest request) {
                         String path = request.getRequestURI();
-                        return path.startsWith("/api-docs") || path.startsWith("/swagger-ui") ||
-                                path.startsWith("/job-world/signup") || path.startsWith("/job-world/verify-email") ||
-                                path.startsWith("/job-world/check-verification");
+                        return path.startsWith("/api-docs") ||
+                                path.startsWith("/swagger-ui") ||
+                                path.startsWith("/job-world/signup") ||
+                                path.startsWith("/job-world/verify-email") ||
+                                path.startsWith("/job-world/check-verification") ||
+                                path.equals("/job-world/login");
                     }
                 }, UsernamePasswordAuthenticationFilter.class);
 

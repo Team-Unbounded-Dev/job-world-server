@@ -59,7 +59,7 @@ jobs:
             docker stop job-world-app || true
             docker rm job-world-app || true
             echo "Running new container"
-            docker run -d --name job-world-app -p 8080:8080 \
+            docker run -d --name job-world-app -p 80:8080 \
               -e SPRING_DATASOURCE_URL="jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}?useSSL=false&serverTimezone=UTC" \
               -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USER }}" \
               -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
@@ -68,8 +68,8 @@ jobs:
               -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
               -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-              -e FILE_STORAGE_DIRECTORY="/uploads" \
+              -e AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}" \
               ${{ steps.build-image.outputs.image }} || { echo "Container start failed"; exit 1; }
             echo "Deployment completed"
           ' || { echo "SSH connection failed"; exit 1; }
-        shell: /usr/bin/bash -e {0}
+        shell: bash

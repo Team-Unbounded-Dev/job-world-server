@@ -44,8 +44,7 @@ public class ProfileService {
                     throw new CustomException("이미지 크기는 5MB를 초과할 수 없습니다.", HttpStatus.BAD_REQUEST);
                 }
                 String fileName = user.getNickname() + "_profile_" + Instant.now().toEpochMilli() + ".jpg";
-                String storedPath = fileStorageService.storeFile(fileName, imageData);
-                profileImageUrl = "/uploads/" + fileName;
+                profileImageUrl = fileStorageService.storeFile(fileName, imageData);
             } catch (IllegalArgumentException e) {
                 throw new CustomException("잘못된 Base64 형식입니다: " + e.getMessage(), HttpStatus.BAD_REQUEST);
             } catch (RuntimeException e) {

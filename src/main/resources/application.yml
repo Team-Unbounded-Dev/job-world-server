@@ -19,8 +19,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        show_sql: true
-        use_sql_comments: true
+        show_sql: false
+        use_sql_comments: false
         dialect: org.hibernate.dialect.MySQL8Dialect
     open-in-view: false
   mail:
@@ -35,6 +35,7 @@ spring:
           auth: true
           starttls:
             enable: true
+          debug: true
   security:
     oauth2:
       client:
@@ -79,8 +80,10 @@ springdoc:
   packages-to-scan: com.example.jobworldserver.auth.controller, com.example.jobworldserver.jobs.controller, com.example.jobworldserver.profile.controller
 
 logging:
+  file:
+    name: /app/logs/jobworld-server.log
   level:
-    root: INFO  # 기본 로깅 레벨을 INFO로 설정
+    root: INFO
     com.example.jobworldserver.auth.service.EmailService: DEBUG  # EmailService 디버그
     com.example.jobworldserver.auth.service.EmailVerificationService: DEBUG  # EmailVerificationService 디버그
     com.example.jobworldserver.auth.controller.AuthController: DEBUG  # AuthController 디버그

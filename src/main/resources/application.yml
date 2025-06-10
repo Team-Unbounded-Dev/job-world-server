@@ -35,7 +35,16 @@ spring:
           auth: true
           starttls:
             enable: true
-          debug: true
+            required: true
+          ssl:
+            trust: smtp.gmail.com  # SSL 인증서 신뢰 설정
+          connectiontimeout: 10000  # 연결 타임아웃 10초
+          timeout: 10000           # 읽기 타임아웃 10초
+          writetimeout: 10000      # 쓰기 타임아웃 10초
+        transport:
+            protocol: smtp
+        debug: true
+
   security:
     oauth2:
       client:

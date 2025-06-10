@@ -17,6 +17,9 @@ public class EmailConfig {
     @Value("${spring.mail.host}")
     private String host;
 
+    @Value("${spring.mail.port:587}")
+    private int port;
+
     @Value("${spring.mail.username}")
     private String username;
 
@@ -26,30 +29,35 @@ public class EmailConfig {
     @Value("${spring.mail.default-encoding:UTF-8}")
     private String defaultEncoding;
 
-    @Value("${spring.mail.properties.mail.smtp.auth:true}")
-    private String auth;
-
-    @Value("${spring.mail.properties.mail.smtp.starttls.enable:true}")
-    private String starttls;
-
     @PostConstruct
     public void init() {
-        log.info("EmailConfig - host: {}, username: {}, defaultEncoding: {}", host, username, defaultEncoding);
+        log.info("EmailConfig - host: {}, port: {}, username: {}", host, port, username);
     }
 
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);
+        mailSender.setPort(port);
         mailSender.setUsername(username);
         mailSender.setPassword(password);
         mailSender.setDefaultEncoding(defaultEncoding);
 
         Properties properties = new Properties();
-        properties.setProperty("mail.smtp.auth", auth);
-        properties.setProperty("mail.smtp.starttls.enable", starttls);
-        mailSender.setJavaMailProperties(properties);
+        properties.put("mail.transport.protocol", "smtp");
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.starttls.enable", "true");
+        properties.put("mail.smtp.starttls.required", "true");
 
+        properties.put("mail.smtp.ssl.trust", host);
+        properties.put("mail.smtp.ssl.protocols", "TLSv1.2");
+
+        // 타임아웃 설정
+        properties.put("mail.smtp.connectiontimeout", "30000");
+        properties.put("mail.smtp.timeout", "30000");
+        properties.put("mail.smtp.writetimeout", "30000");
+
+        mailSender.setJavaMailProperties(properties);
         return mailSender;
     }
 }

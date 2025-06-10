@@ -28,6 +28,7 @@ spring:
     host: smtp.gmail.com
     username: testdisk1110@gmail.com
     password: "lcbk silq oexu laom"
+    port: 587
     properties:
       mail:
         smtp:
@@ -49,6 +50,12 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 10MB
+      resolve-lazily: false
 
 cloud:
   aws:
@@ -73,7 +80,12 @@ springdoc:
 
 logging:
   level:
-    org.springframework.core.env: DEBUG
+    root: INFO  # 기본 로깅 레벨을 INFO로 설정
+    com.example.jobworldserver.auth.service.EmailService: DEBUG  # EmailService 디버그
+    com.example.jobworldserver.auth.service.EmailVerificationService: DEBUG  # EmailVerificationService 디버그
+    com.example.jobworldserver.auth.controller.AuthController: DEBUG  # AuthController 디버그
+    org.springframework.mail: DEBUG  # Spring Mail 디버그
+    com.sun.mail: DEBUG  # JavaMail 디버그
     org.springframework.security: TRACE
     org.springframework.security.oauth2: TRACE
     com.example.jobworldserver.domain.config: INFO

@@ -68,7 +68,7 @@ public class User implements UserDetails, OAuth2User {
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
-    @Column(nullable = true)
+    @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl;
 
     private String introduction;
@@ -131,5 +131,8 @@ public class User implements UserDetails, OAuth2User {
         this.jobName = jobName != null ? jobName : this.jobName;
         this.profileImageUrl = profileImageUrl != null ? profileImageUrl : this.profileImageUrl;
         this.introduction = introduction != null ? introduction : this.introduction;
+    }
+    public String getNameField() {
+        return this.name;
     }
 }

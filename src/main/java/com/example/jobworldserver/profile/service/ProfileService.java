@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.Instant;
 
 @Service
@@ -25,7 +27,7 @@ public class ProfileService {
     private final FileStorageService fileStorageService;
 
     @Transactional
-    public ProfileResponse updateProfile(Long userId, ProfileRequest request) {
+    public ProfileResponse updateProfile(Long userId, ProfileRequest request, MultipartFile file) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다: userId=" + userId, HttpStatus.NOT_FOUND));
 
@@ -35,18 +37,16 @@ public class ProfileService {
         }
 
         String profileImageUrl = user.getProfileImageUrl();
-        if (request.getProfileImage() != null && !request.getProfileImage().isEmpty()) {
-            String base64Image = extractBase64Data(request.getProfileImage());
-            logger.debug("추출된 Base64 데이터 길이: {}", base64Image.length());
+        if (file != null && !file.isEmpty()) {
+            logger.debug("업로드된 파일 크기: {} bytes", file.getSize());
             try {
-                byte[] imageData = java.util.Base64.getDecoder().decode(base64Image);
-                if (imageData.length > 5 * 1024 * 1024) {
+                if (file.getSize() > 5 * 1024 * 1024) {
                     throw new CustomException("이미지 크기는 5MB를 초과할 수 없습니다.", HttpStatus.BAD_REQUEST);
                 }
-                String fileName = user.getNickname() + "_profile_" + Instant.now().toEpochMilli() + ".jpg";
-                profileImageUrl = fileStorageService.storeFile(fileName, imageData);
-            } catch (IllegalArgumentException e) {
-                throw new CustomException("잘못된 Base64 형식입니다: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+                String fileName = user.getNickname() + "_profile_" + Instant.now().toEpochMilli() + "." + file.getOriginalFilename().split("\\.")[1];
+                profileImageUrl = fileStorageService.storeFile(fileName, file);
+            } catch (IOException e) {
+                throw new CustomException("파일 처리 실패: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
             } catch (RuntimeException e) {
                 throw new CustomException("파일 저장 실패: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -80,32 +80,12 @@ public class ProfileService {
 
     private ProfileResponse mapToResponse(User user) {
         ProfileResponse response = new ProfileResponse();
-        response.setName(user.getName());
+        response.setName(user.getNameField()); // 새로운 getter 사용
         response.setNickname(user.getNickname());
         response.setAge(user.getAge());
         response.setJob(user.getJobName());
         response.setIntroduction(user.getIntroduction());
         response.setProfileImageUrl(user.getProfileImageUrl());
         return response;
-    }
-
-    private String extractBase64Data(String imageData) {
-        if (imageData == null || imageData.isEmpty()) {
-            return null;
-        }
-
-        String prefixPattern = "data:image/[^;]+;base64,";
-        if (imageData.matches(prefixPattern + "[A-Za-z0-9+/=]+")) {
-            String[] parts = imageData.split(",");
-            if (parts.length != 2) {
-                throw new CustomException("Base64 데이터 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
-            }
-            return parts[1].trim();
-        }
-
-        if (imageData.matches("[A-Za-z0-9+/=]+")) {
-            return imageData.trim();
-        }
-        throw new CustomException("Base64 데이터 형식이 올바르지 않습니다.", HttpStatus.BAD_REQUEST);
     }
 }

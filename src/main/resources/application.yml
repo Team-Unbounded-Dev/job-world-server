@@ -43,7 +43,7 @@ spring:
           writetimeout: 10000      # 쓰기 타임아웃 10초
         transport:
             protocol: smtp
-        debug: true
+        debug: false
 
   security:
     oauth2:
@@ -78,32 +78,36 @@ cloud:
 
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /v3/api-docs
+    enabled: true
   swagger-ui:
     path: /swagger-ui.html
+    enabled: true
     operations-sorter: method
     tags-sorter: alpha
-    oauth2RedirectUrl: http://13.125.112.86/swagger-ui/oauth2-redirect.html
+    try-it-out-enabled: true
+    disable-swagger-default-url: true
+    display-request-duration: true
+    display-operation-id: true
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
-  packages-to-scan: com.example.jobworldserver.auth.controller, com.example.jobworldserver.jobs.controller, com.example.jobworldserver.profile.controller
+  packages-to-scan: com.example.jobworldserver
+  show-actuator: false
+  writer-with-order-by-keys: true
 
 logging:
   file:
     name: /app/logs/jobworld-server.log
   level:
     root: INFO
-    com.example.jobworldserver.auth.service.EmailService: DEBUG  # EmailService 디버그
-    com.example.jobworldserver.auth.service.EmailVerificationService: DEBUG  # EmailVerificationService 디버그
-    com.example.jobworldserver.auth.controller.AuthController: DEBUG  # AuthController 디버그
-    org.springframework.mail: DEBUG  # Spring Mail 디버그
-    com.sun.mail: DEBUG  # JavaMail 디버그
-    org.springframework.security: TRACE
-    org.springframework.security.oauth2: TRACE
-    com.example.jobworldserver.domain.config: INFO
-    com.zaxxer.hikari: DEBUG
-    com.mysql.cj.jdbc: DEBUG
-    org.springdoc: DEBUG
+    com.example.jobworldserver: INFO
+    org.springframework.security: INFO
+    org.springframework.security.oauth2: INFO
+    org.springframework.web: INFO
+    org.hibernate: WARN
+    com.zaxxer.hikari: WARN
+    com.mysql.cj.jdbc: WARN
+    org.springdoc: WARN
 
 jwt:
   secret: ${JWT_SECRET:zWgYYrmkAWMHkMgjOlwV8bwO8FbNVWeJjKz9SR0M6GOBbPTb6G77mITLOXPGzFaaCTAE5CtYvGkzHzP5Aow9dA==}

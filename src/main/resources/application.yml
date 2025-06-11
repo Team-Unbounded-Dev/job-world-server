@@ -96,8 +96,6 @@ springdoc:
   writer-with-order-by-keys: true
 
 logging:
-  file:
-    name: /app/logs/jobworld-server.log
   level:
     root: INFO
     com.example.jobworldserver: INFO

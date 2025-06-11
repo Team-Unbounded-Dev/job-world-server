@@ -1,7 +1,6 @@
 package com.example.jobworldserver.profile.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -21,8 +20,4 @@ public class ProfileRequest {
 
     @Size(max = 500, message = "소개글은 500자 이내여야 합니다.")
     private String introduction;
-
-    @Pattern(regexp = "^(data:image/[^;]+;base64,)?[A-Za-z0-9+/=]+$",
-            message = "프로필 이미지는 올바른 Base64 형식이어야 합니다.")
-    private String profileImage;
 }

@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 
@@ -45,6 +46,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                // CORS 설정을 가장 먼저 적용
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 기본 로그인/로그아웃 페이지 비활성화
@@ -82,6 +84,9 @@ public class SecurityConfig {
                         // 테스트 경로
                         .requestMatchers("/test/**").permitAll()
 
+                        // OPTIONS 요청 허용 (CORS preflight)
+                        .requestMatchers("OPTIONS", "/**").permitAll()
+
                         // 인증된 사용자만 접근 가능한 경로들
                         .requestMatchers("/job-world/**").authenticated()
                         .requestMatchers("/oauth2/user-info").authenticated()
@@ -103,6 +108,8 @@ public class SecurityConfig {
                                 .baseUri("/job-world/login/oauth2/code/*"))
                 )
 
+                // CORS 필터를 가장 먼저 추가
+                .addFilterBefore(corsFilter(), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthenticationFilter(jwtService, userDetailsService, objectMapper) {
                     @Override
                     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -154,8 +161,23 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
+        configuration.setExposedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers"
+        ));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        return new CorsFilter(corsConfigurationSource());
     }
 }

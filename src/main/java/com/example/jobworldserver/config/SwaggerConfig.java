@@ -27,8 +27,8 @@ public class SwaggerConfig {
                         .version("1.0")
                         .description("Job World Server API Documentation"))
                 .servers(List.of(
-                        new Server().url("http://localhost:8080" + contextPath).description("Local server"),
-                        new Server().url("http://13.125.112.86" + contextPath).description("Production server")
+                        new Server().url("http://13.125.112.86:8080" + contextPath).description("Production server"),
+                        new Server().url("http://localhost:8080" + contextPath).description("Local server")
                 ))
                 .components(new Components()
                         .addSecuritySchemes("bearerAuth", new SecurityScheme()

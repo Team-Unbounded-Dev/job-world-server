@@ -38,7 +38,7 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
 
-    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:8080,http://13.125.112.86}")
+    @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:8080,http://13.125.112.86:8080}")
     private String[] allowedOrigins;
 
     @Bean
@@ -140,7 +140,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(allowedOrigins));
+
+        // 포트 번호를 포함한 허용 Origin 설정
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:3000",
+                "http://localhost:8080",
+                "http://13.125.112.86:8080",
+                "https://13.125.112.86:8080"
+        ));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

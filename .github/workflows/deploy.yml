@@ -47,29 +47,23 @@ jobs:
           HOSTNAME: ${{ secrets.EC2_HOST }}
           USER_NAME: ubuntu
         run: |
-          echo "Private key file creation started"
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key || { echo "Private key setup failed"; exit 1; }
-          echo "SSH connection attempt to ${USER_NAME}@${HOSTNAME}"
+          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} '
-            echo "Logging into ECR on EC2"
-            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }} || { echo "ECR login failed"; exit 1; }
-            echo "Pulling Docker image: ${{ steps.build-image.outputs.image }}"
-            docker pull ${{ steps.build-image.outputs.image }} || { echo "Image pull failed"; exit 1; }
-            echo "Stopping and removing old container"
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ steps.login-ecr.outputs.registry }}
+            docker pull ${{ steps.build-image.outputs.image }}
             docker stop job-world-app || true
             docker rm job-world-app || true
-            echo "Running new container"
-            docker run -d --name job-world-app -p 8080:8080 \
+            docker run -d --name job-world-app -p 8080:8080 --network host \
               -e SPRING_DATASOURCE_URL="jdbc:mysql://${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}?useSSL=false&serverTimezone=UTC" \
               -e SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USER }}" \
               -e SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}" \
-              -e SPRING_DATA_REDIS_HOST="${{ secrets.REDIS_HOST }}" \
+              -e SPRING_DATA_REDIS_HOST="localhost" \
               -e SPRING_DATA_REDIS_PORT="6379" \
+              -e SPRING_DATA_REDIS_SSL="false" \
               -e GOOGLE_CLIENT_ID="${{ secrets.GOOGLE_CLIENT_ID }}" \
               -e GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
               -e AWS_S3_BUCKET="${{ secrets.AWS_S3_BUCKET }}" \
-              ${{ steps.build-image.outputs.image }} || { echo "Container start failed"; exit 1; }
-            echo "Deployment completed"
-          ' || { echo "SSH connection failed"; exit 1; }
+              ${{ steps.build-image.outputs.image }}
+          '
         shell: bash

@@ -29,6 +29,7 @@ public class RedisConfig {
     @Value("${spring.data.redis.port}")
     private int port;
 
+    // password 필드 없애거나 그냥 둬도 상관없지만, 설정에서 없으면 빈 문자열로 처리됨
     @Value("${spring.data.redis.password:}")
     private String password;
 
@@ -41,7 +42,6 @@ public class RedisConfig {
     public RedisConnectionFactory redisConnectionFactory() {
         log.info("Redis 연결 설정 시작: {}:{}", host, port);
 
-        // Redis 서버 설정
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
         config.setHostName(host);
         config.setPort(port);
@@ -49,29 +49,27 @@ public class RedisConfig {
         if (password != null && !password.trim().isEmpty()) {
             config.setPassword(password);
             log.info("Redis 비밀번호 설정됨");
+        } else {
+            log.info("Redis 비밀번호 설정 안함");
         }
 
-        // 클라이언트 리소스 설정
         clientResources = DefaultClientResources.builder()
                 .ioThreadPoolSize(4)
                 .computationThreadPoolSize(4)
                 .build();
 
-        // 소켓 옵션 설정
         SocketOptions socketOptions = SocketOptions.builder()
                 .connectTimeout(Duration.ofMillis(timeout))
                 .keepAlive(true)
                 .tcpNoDelay(true)
                 .build();
 
-        // 클라이언트 옵션 설정
         ClientOptions clientOptions = ClientOptions.builder()
                 .socketOptions(socketOptions)
                 .autoReconnect(true)
                 .disconnectedBehavior(ClientOptions.DisconnectedBehavior.REJECT_COMMANDS)
                 .build();
 
-        // Lettuce 클라이언트 설정
         LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
                 .clientOptions(clientOptions)
                 .clientResources(clientResources)
@@ -84,7 +82,6 @@ public class RedisConfig {
         factory.setShareNativeConnection(true);
         factory.afterPropertiesSet();
 
-        // 연결 테스트
         try {
             factory.getConnection().ping();
             log.info("Redis 연결 성공: {}:{}", host, port);
@@ -101,7 +98,6 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
 
-        // Key는 String, Value는 JSON으로 직렬화
         StringRedisSerializer stringSerializer = new StringRedisSerializer();
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
 

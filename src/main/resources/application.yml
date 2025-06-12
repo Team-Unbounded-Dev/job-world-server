@@ -11,7 +11,7 @@ spring:
     allow-circular-references: false
   data:
     redis:
-      host: ${REDIS_HOST:13.125.112.86}
+      host: ${REDIS_HOST:172.31.5.84}
       port: ${REDIS_PORT:6379}
   jpa:
     hibernate:
@@ -37,12 +37,12 @@ spring:
             enable: true
             required: true
           ssl:
-            trust: smtp.gmail.com  # SSL 인증서 신뢰 설정
-          connectiontimeout: 10000  # 연결 타임아웃 10초
-          timeout: 10000           # 읽기 타임아웃 10초
-          writetimeout: 10000      # 쓰기 타임아웃 10초
+            trust: smtp.gmail.com
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
         transport:
-            protocol: smtp
+          protocol: smtp
         debug: false
 
   security:
@@ -60,6 +60,7 @@ spring:
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
+
   servlet:
     multipart:
       enabled: true
